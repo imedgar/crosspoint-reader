@@ -89,6 +89,13 @@ void KOReaderSyncActivity::performSync() {
     documentHash = KOReaderDocumentId::calculate(epubPath);
   }
   if (documentHash.empty()) {
+    if (syncMode == SyncMode::PUSH_ONLY) {
+      ActivityResult cancelResult;
+      cancelResult.isCancelled = true;
+      setResult(std::move(cancelResult));
+      finish();
+      return;
+    }
     {
       RenderLock lock(*this);
       state = SYNC_FAILED;
@@ -99,6 +106,12 @@ void KOReaderSyncActivity::performSync() {
   }
 
   LOG_DBG("KOSync", "Document hash: %s", documentHash.c_str());
+
+  // In SyncMode::PUSH_ONLY skip fetching remote and upload right away
+  if (syncMode == SyncMode::PUSH_ONLY) {
+    performUpload();
+    return;
+  }
 
   {
     RenderLock lock(*this);
@@ -173,6 +186,13 @@ void KOReaderSyncActivity::performUpload() {
   const auto result = KOReaderSyncClient::updateProgress(progress);
 
   if (result != KOReaderSyncClient::OK) {
+    if (syncMode == SyncMode::PUSH_ONLY) {
+      ActivityResult cancelResult;
+      cancelResult.isCancelled = true;
+      setResult(std::move(cancelResult));
+      finish();
+      return;
+    }
     wifiOff();
     {
       RenderLock lock(*this);
@@ -180,6 +200,12 @@ void KOReaderSyncActivity::performUpload() {
       statusMessage = KOReaderSyncClient::errorString(result);
     }
     requestUpdate();
+    return;
+  }
+
+  if (syncMode == SyncMode::PUSH_ONLY) {
+    setResult(SyncResult{currentSpineIndex, currentPage});
+    finish();
     return;
   }
 

@@ -1,7 +1,6 @@
 #pragma once
 #include <Epub.h>
 
-#include <functional>
 #include <memory>
 
 #include "KOReaderSyncClient.h"
@@ -20,9 +19,12 @@
  */
 class KOReaderSyncActivity final : public Activity {
  public:
+  enum class SyncMode { INTERACTIVE, PUSH_ONLY };
+
   explicit KOReaderSyncActivity(GfxRenderer& renderer, MappedInputManager& mappedInput,
                                 const std::shared_ptr<Epub>& epub, const std::string& epubPath, int currentSpineIndex,
-                                int currentPage, int totalPagesInSpine)
+                                int currentPage, int totalPagesInSpine,
+                                SyncMode syncMode = SyncMode::INTERACTIVE)
       : Activity("KOReaderSync", renderer, mappedInput),
         epub(epub),
         epubPath(epubPath),
@@ -31,7 +33,8 @@ class KOReaderSyncActivity final : public Activity {
         totalPagesInSpine(totalPagesInSpine),
         remoteProgress{},
         remotePosition{},
-        localProgress{} {}
+        localProgress{},
+        syncMode(syncMode) {}
 
   void onEnter() override;
   void onExit() override;
@@ -72,6 +75,8 @@ class KOReaderSyncActivity final : public Activity {
 
   // Selection in result screen (0=Apply, 1=Upload)
   int selectedOption = 0;
+
+  SyncMode syncMode;
 
   void onWifiSelectionComplete(bool success);
   void performSync();
