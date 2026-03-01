@@ -128,7 +128,6 @@ void EpubReaderActivity::loop() {
     return;
   }
 
-  // Deferred sleep: process after startActivityForResult callback to avoid use-after-free
   if (pendingSleep) {
     pendingSleep = false;
     extern void enterDeepSleep();

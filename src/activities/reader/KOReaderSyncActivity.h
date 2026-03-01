@@ -23,8 +23,7 @@ class KOReaderSyncActivity final : public Activity {
 
   explicit KOReaderSyncActivity(GfxRenderer& renderer, MappedInputManager& mappedInput,
                                 const std::shared_ptr<Epub>& epub, const std::string& epubPath, int currentSpineIndex,
-                                int currentPage, int totalPagesInSpine,
-                                SyncMode syncMode = SyncMode::INTERACTIVE)
+                                int currentPage, int totalPagesInSpine, SyncMode syncMode = SyncMode::INTERACTIVE)
       : Activity("KOReaderSync", renderer, mappedInput),
         epub(epub),
         epubPath(epubPath),
