@@ -130,7 +130,6 @@ void EpubReaderActivity::loop() {
 
   if (pendingSleep) {
     pendingSleep = false;
-    extern void enterDeepSleep();
     enterDeepSleep();
     return;
   }
