@@ -14,7 +14,7 @@
  * 1. Connect to WiFi (if not connected)
  * 2. Calculate document hash
  * 3. Fetch remote progress
- * 4. Show comparison and options (Apply/Upload)
+ * 4. Show comparison and options (Apply/Upload) or Skip when SyncMode::PUSH_ONLY
  * 5. Apply or upload progress
  */
 class KOReaderSyncActivity final : public Activity {
@@ -76,8 +76,6 @@ class KOReaderSyncActivity final : public Activity {
   int selectedOption = 0;
 
   SyncMode syncMode;
-
-  // Deferred finish for PUSH_ONLY mode (worker task → main loop)
   bool pendingFinish = false;
   ActivityResult pendingFinishResult;
 
