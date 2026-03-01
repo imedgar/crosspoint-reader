@@ -77,6 +77,11 @@ class KOReaderSyncActivity final : public Activity {
 
   SyncMode syncMode;
 
+  // Deferred finish for PUSH_ONLY mode (worker task → main loop)
+  bool pendingFinish = false;
+  ActivityResult pendingFinishResult;
+
+  void deferFinish(ActivityResult&& result);
   void onWifiSelectionComplete(bool success);
   void performSync();
   void performUpload();

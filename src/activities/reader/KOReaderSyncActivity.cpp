@@ -81,6 +81,12 @@ void KOReaderSyncActivity::onWifiSelectionComplete(const bool success) {
   performSync();
 }
 
+void KOReaderSyncActivity::deferFinish(ActivityResult&& result) {
+  RenderLock lock(*this);
+  pendingFinishResult = std::move(result);
+  pendingFinish = true;
+}
+
 void KOReaderSyncActivity::performSync() {
   // Calculate document hash based on user's preferred method
   if (KOREADER_STORE.getMatchMethod() == DocumentMatchMethod::FILENAME) {
@@ -92,8 +98,7 @@ void KOReaderSyncActivity::performSync() {
     if (syncMode == SyncMode::PUSH_ONLY) {
       ActivityResult cancelResult;
       cancelResult.isCancelled = true;
-      setResult(std::move(cancelResult));
-      finish();
+      deferFinish(std::move(cancelResult));
       return;
     }
     {
@@ -189,8 +194,7 @@ void KOReaderSyncActivity::performUpload() {
     if (syncMode == SyncMode::PUSH_ONLY) {
       ActivityResult cancelResult;
       cancelResult.isCancelled = true;
-      setResult(std::move(cancelResult));
-      finish();
+      deferFinish(std::move(cancelResult));
       return;
     }
     wifiOff();
@@ -204,8 +208,7 @@ void KOReaderSyncActivity::performUpload() {
   }
 
   if (syncMode == SyncMode::PUSH_ONLY) {
-    setResult(SyncResult{currentSpineIndex, currentPage});
-    finish();
+    deferFinish(SyncResult{currentSpineIndex, currentPage});
     return;
   }
 
@@ -379,6 +382,18 @@ void KOReaderSyncActivity::render(RenderLock&&) {
 }
 
 void KOReaderSyncActivity::loop() {
+  if (syncMode == SyncMode::PUSH_ONLY) {
+    RenderLock lock(*this);
+    if (pendingFinish) {
+      pendingFinish = false;
+      auto finishResult = std::move(pendingFinishResult);
+      lock.unlock();
+      setResult(std::move(finishResult));
+      finish();
+      return;
+    }
+  }
+
   if (state == NO_CREDENTIALS || state == SYNC_FAILED || state == UPLOAD_COMPLETE) {
     if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
       ActivityResult result;
